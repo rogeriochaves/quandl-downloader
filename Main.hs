@@ -11,15 +11,20 @@ main = do
 
 downloadStockCsv stock = do
   putStrLn $ "Downloading " ++ stock
-  token <- getEnv "QUANDL_KEY"
-  request <- getStock stock token
-  manager <- newManager tlsManagerSettings
-  response <- httpLbs request manager
-  return $ responseBody response
+  response <- getStock stock
   writeFile ("data/" ++ (replace "/" "-" stock) ++ ".csv") $ show $ responseBody response
   putStrLn "Finished"
 
-getStock stock token = setQueryString query <$> url
+getStock stock = do
+  request <- getStockRequestWithEnvToken stock
+  manager <- newManager tlsManagerSettings
+  httpLbs request manager
+
+getStockRequestWithEnvToken stock = do
+  token <- getEnv "QUANDL_KEY"
+  getStockRequest stock token
+
+getStockRequest stock token = setQueryString query <$> url
          where
           url = parseUrl $ "https://www.quandl.com/api/v3/datasets/" ++ stock ++ "/data.csv"
           query = queryParam <$> [("api_key", token),
