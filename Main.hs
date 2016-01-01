@@ -11,13 +11,13 @@ main = do
 
 downloadStockCsv stock = do
   putStrLn $ "Downloading " ++ stock
-  response <- getStock stock
+  manager <- newManager tlsManagerSettings
+  response <- getStock stock manager
   writeFile ("data/" ++ (replace "/" "-" stock) ++ ".csv") $ show $ responseBody response
   putStrLn "Finished"
 
-getStock stock = do
+getStock stock manager = do
   request <- getStockRequestWithEnvToken stock
-  manager <- newManager tlsManagerSettings
   httpLbs request manager
 
 getStockRequestWithEnvToken stock = do
